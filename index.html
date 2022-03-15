@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Conowayy</title>
+    <style>
+      * { padding: 0; margin: 10; }
+
+      #container {
+        position: relative;
+      }
+      #container canvas, #overlayed-grid {
+        position: absolute;
+      }
+
+      canvas {
+        display: block; 
+        margin: 0 auto; 
+      }
+
+      .button {
+        border: 7px solid #0307fc;
+        border-radius: 20px;
+        color: rgb(0, 0, 0);
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: bold;
+        display: inline-block;
+        font-size: 30px;
+        transition-duration: 0.85s;
+        cursor: pointer;
+        background-color: #0307fc41;
+      }
+      .button:hover {
+        background-color: #0307fc;
+        color: #ffffff;
+      }
+
+      .grid-container {
+        display: grid;
+        background-color: #2195f300;
+        padding: 0px;
+      }
+      .grid-button {
+        background-color: rgba(0, 0, 0, 0.25);
+        border: 2px solid #0307fc;
+        transition-duration: 0.3s;
+      }
+      .grid-button:hover {
+        background-color: rgba(15, 14, 90, 0.596);
+      }
+    </style>
+</head>
+<body>
+
+  <div id="container">
+    <canvas id="myCanvas" width="1" height="1"></canvas>
+    <div id="overlayed-grid" class="grid-container"></div>
+  </div>
+  <h2 id="tuto">
+      You can chage the attributes of the grid in the console with the following variable: \n
+      <p>SIZE : the size of each square in pixels</p>
+      <p>GRIDHEIGHT : the number of square in height</p>
+      <p>GRIDlength : the number of square in width</p>
+      <p>the default are : SIZE = 50; GRIDHEIGHT = 10; GRIDLENGTH = 30</p>
+      <p>⛔⛔Do not change the variables once loaded</p>
+    </h2>
+  <button class="button" id="frame_button">Load Grid</button>
+  
+  <script>
+    // game info: https://playgameoflife.com/info
+    // constant variables but can be chaged by the user
+    let SIZE = 50
+    let GRIDHEIGHT = 10
+    let GRIDLENGTH = 30
+    
+    // set used elements
+    var canvas = document.getElementById("myCanvas");
+    
+    let button_grid = document.getElementById("overlayed-grid")
+    
+    let frame_button = document.getElementById("frame_button")
+    frame_button.onclick = load
+
+    var ctx = canvas.getContext("2d");
+    
+    // for events
+    document.onkeypress = function (e) {
+      e = e || window.event
+      // use keycodes
+      switch (e.key) {
+        case ' ':  // space bar
+            nextFrame();
+            break;
+        case 'r': // 'r'
+        location.reload()
+            //button_grid.
+            break;
+        default:
+            console.log(`key pressed: ${e.key}\nevent: ${e.keyCode}`)
+      }
+    }
+
+    class History {
+      constructor(iterationBegin = 0) {
+        this.actionList = {} // all lists of action with a spaecial index as a key
+        this.actionList[iterationBegin] = [] // list of the actions in this iteration
+        this.iteration = iterationBegin
+      }
+      nextIteration() {
+        this.iteration ++
+        this.actionList[this.iteration] = []
+      }
+      add(x, y) {
+        this.actionList[this.iteration].push({action: 1, coor: [x, y]})
+      }
+      remove(x, y) {
+        this.actionList[this.iteration].push({action: -1, coor: [x, y]})
+      }
+    }
+    
+    function square(...pos) {
+      ctx.beginPath();
+      ctx.rect(pos[0], pos[1], SIZE, SIZE) // (x(0 is the top), y(0 is the top), width, height)
+      ctx.fillStyle = '#000000'
+      ctx.fill()
+      ctx.closePath()
+    }
+    function unSquare(x, y) {
+      ctx.clearRect(x, y, SIZE, SIZE) // (x(0 is the top), y(0 is the top), width, height)
+    }
+
+    // create an empty grid
+    let grid = []
+    let history = new History()
+
+    function load () {
+      button_grid.style.gridTemplateColumns = 'auto '.repeat(GRIDLENGTH) // the numbers of columns
+      canvas.setAttribute('width', SIZE*GRIDLENGTH)
+      canvas.setAttribute('height', SIZE*GRIDHEIGHT)
+      
+      frame_button.onclick = nextFrame
+      frame_button.innerText = "Next Frame"
+      frame_button.style.marginTop = `${SIZE*GRIDHEIGHT + 10}px`
+      
+      document.getElementById("tuto").remove()
+      
+      while (grid.length < GRIDHEIGHT) {
+        let l = []
+        while (l.length < GRIDLENGTH) {
+          l.push([0,,])
+    
+          let new_button = document.createElement('button')
+          new_button.setAttribute('class', 'grid-button')
+          new_button.style.padding = `${SIZE/2 - 2}px`
+          new_button.setAttribute('x', l.length - 1)
+          new_button.setAttribute('y', grid.length)
+    
+          new_button.onclick = function () {
+            this.blur()
+            let y = this.getAttribute('y')
+            let x = this.getAttribute('x')
+    
+            // console.log(`position: (${x}, ${y})`)
+            if (grid[y][x][0] == 0) {
+              grid[y][x][0] = 1
+              square(x*SIZE, y*SIZE)
+              history.add(x, y)
+            } else {
+              grid[y][x][0] = 0
+              unSquare(x*SIZE, y*SIZE)
+              history.remove(x, y)
+            }
+          }
+    
+          button_grid.appendChild(new_button)
+        }
+        grid.push(l)
+      }
+      draw_grid()
+    }
+
+    // draw that grid
+    function draw_grid() {
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          if (grid[y][x][0]) {
+            square(x*SIZE, y*SIZE)
+          }
+        }
+      }
+    }
+    
+    function isAlive(x, y, exists) {
+      //exists variable overides
+      exists = exists || grid[y][x][0]
+      // right, bottom right, bottom, bottom left, left, top left, top, top right
+      let neighbor = [
+        x < GRIDLENGTH - 1 ? grid[ y ][ x + 1 ][0] : 0,
+        y < GRIDHEIGHT - 1 && x < GRIDLENGTH - 1 ? grid[ y + 1 ][ x + 1 ][0] : 0,
+        y < GRIDHEIGHT - 1 ? grid[ y + 1 ][ x ][0] : 0,
+        x > 0 && y < GRIDHEIGHT - 1 ? grid[ y + 1 ][ x - 1 ][0] : 0,
+        x > 0 ? grid[ y ][ x - 1][0] : 0,
+        x > 0 && y > 0 ? grid[ y - 1 ][ x - 1 ][0] : 0,
+        y > 0 ? grid[ y - 1 ][ x ][0] : 0,
+        y > 0 && x < GRIDLENGTH - 1 ? grid[ y - 1 ][ x + 1 ][0] : 0,
+      ]
+      let num_of_neighbor = neighbor.reduce((prev, curr) => prev + curr, 0)
+      // if the cell is empty
+      if (exists == 0) {
+        return num_of_neighbor == 3
+      } else {
+        return num_of_neighbor == 3 || num_of_neighbor == 2
+      }
+    }
+    
+    function nextFrame() {
+      history.nextIteration()
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          grid[y][x][1] = isAlive(x, y)
+          if (grid[y][x][1]) {
+          }
+        }
+      }
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          if (grid[y][x][1] && grid[y][x][0] == 0) { // if the cell should be alive but isn't
+            grid[y][x][0] = 1
+            history.add(x, y)
+          } else if (grid[y][x][0] == 1 && !grid[y][x][1]) { // should be dead but isn't
+            grid[y][x][0] = 0
+            history.remove(x, y)
+          }
+        }
+      }
+      draw_grid()
+    }
+
+    function prevFrame() {
+      
+    }
+  </script>
+
+</body>
+</html>
