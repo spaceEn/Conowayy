@@ -117,6 +117,14 @@
       remove(x, y) {
         this.actionList[this.iteration].push({action: -1, coor: [x, y]})
       }
+      reverse() {
+
+        const last = this.actionList[this.actionList.length - 1]
+        // remove the last action since it's undone
+        this.actionList
+        // return the list of the last actions
+        return last
+      }
     }
     
     function square(...pos) {
@@ -239,7 +247,9 @@
     }
 
     function prevFrame() {
-      
+      for (let actIndex in history.reverse()) {
+
+      }
     }
   </script>
 
