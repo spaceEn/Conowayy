@@ -111,19 +111,19 @@
         this.iteration ++
         this.actionList[this.iteration] = []
       }
+      reverse() {
+        const last = this.actionList[this.iteration]
+        // remove the last action since it's undone
+        delete this.actionList[this.iteration]
+        this.iteration--
+        // return the list of the last actions
+        return last
+      }
       add(x, y) {
         this.actionList[this.iteration].push({action: 1, coor: [x, y]})
       }
       remove(x, y) {
         this.actionList[this.iteration].push({action: -1, coor: [x, y]})
-      }
-      reverse() {
-
-        const last = this.actionList[this.actionList.length - 1]
-        // remove the last action since it's undone
-        this.actionList
-        // return the list of the last actions
-        return last
       }
     }
     
@@ -222,16 +222,19 @@
       }
     }
     
-    function nextFrame() {
-      history.nextIteration()
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+          function fillLife() {
+      // fills the lifeness of each square
       for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
           grid[y][x][1] = isAlive(x, y)
-          if (grid[y][x][1]) {
           }
         }
       }
+
+  function nextFrame() {
+    history.nextIteration()
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    fillLife()
       for (let y = 0; y < grid.length; y++) {
         for (let x = 0; x < grid[y].length; x++) {
           if (grid[y][x][1] && grid[y][x][0] == 0) { // if the cell should be alive but isn't
@@ -247,8 +250,13 @@
     }
 
     function prevFrame() {
-      for (let actIndex in history.reverse()) {
-
+      const last = history.reverse()
+      for (let actIndex in last) {
+        let action = last[actIndex]
+        // reverse the actoins
+        if (action.action == -1) {
+          grid[]
+        }
       }
     }
   </script>
